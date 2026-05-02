@@ -1,5 +1,5 @@
 {
-    "name": "mariusz/php-logger",
+    "name": "mafio69/php-logger",
     "description": "PSR-3 dual logger with file rotation, date-based structure and automatic anonymization of sensitive fields",
     "type": "library",
     "license": "MIT",

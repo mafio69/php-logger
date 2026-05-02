@@ -1,4 +1,4 @@
-# mariusz/php-logger
+# mafio69/php-logger
 
 PSR-3 compliant dual logger for PHP 8.1+ with:
 - date-based log file structure with configurable subdirectory pattern
@@ -11,7 +11,7 @@ PSR-3 compliant dual logger for PHP 8.1+ with:
 ## Installation
 
 ```sh
-composer require mariusz/php-logger
+composer require mafio69/php-logger
 ```
 
 ## Quick start
