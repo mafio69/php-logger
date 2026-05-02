@@ -72,4 +72,92 @@ final class LogFileManagerTest extends TestCase
         $this->assertFileExists($path . '.1');
         $this->assertStringContainsString('new entry', file_get_contents($path));
     }
+
+    public function testPrefixIsIncludedInFilename(): void
+    {
+        $manager = new LogFileManager($this->tmpDir, prefix: 'app-');
+        $manager->write('test');
+
+        $expected = sprintf('%s/%s/%s/app-%s.log',
+            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        );
+
+        $this->assertFileExists($expected);
+    }
+
+    public function testSuffixIsIncludedInFilename(): void
+    {
+        $manager = new LogFileManager($this->tmpDir, suffix: '-prod');
+        $manager->write('test');
+
+        $expected = sprintf('%s/%s/%s/%s-prod.log',
+            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        );
+
+        $this->assertFileExists($expected);
+    }
+
+    public function testPrefixAndSuffixCombined(): void
+    {
+        $manager = new LogFileManager($this->tmpDir, prefix: 'app-', suffix: '-prod');
+        $manager->write('test');
+
+        $expected = sprintf('%s/%s/%s/app-%s-prod.log',
+            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        );
+
+        $this->assertFileExists($expected);
+    }
+
+    public function testNoPrefixOrSuffixUsesDefaultFilename(): void
+    {
+        $manager = new LogFileManager($this->tmpDir);
+        $manager->write('test');
+
+        $expected = sprintf('%s/%s/%s/%s.log',
+            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        );
+
+        $this->assertFileExists($expected);
+    }
+
+    public function testDateStructureYearOnly(): void
+    {
+        $manager = new LogFileManager($this->tmpDir, dateStructure: 'Y');
+        $manager->write('test');
+
+        $expected = sprintf('%s/%s/%s.log', $this->tmpDir, date('Y'), date('Y-m-d'));
+        $this->assertFileExists($expected);
+    }
+
+    public function testDateStructureFlat(): void
+    {
+        $manager = new LogFileManager($this->tmpDir, dateStructure: '');
+        $manager->write('test');
+
+        $expected = sprintf('%s/%s.log', $this->tmpDir, date('Y-m-d'));
+        $this->assertFileExists($expected);
+    }
+
+    public function testDateStructureDailyDir(): void
+    {
+        $manager = new LogFileManager($this->tmpDir, dateStructure: 'Y/m/d');
+        $manager->write('test');
+
+        $expected = sprintf('%s/%s/%s/%s/%s.log',
+            $this->tmpDir, date('Y'), date('m'), date('d'), date('Y-m-d')
+        );
+        $this->assertFileExists($expected);
+    }
+
+    public function testDefaultDateStructureIsYearMonth(): void
+    {
+        $manager = new LogFileManager($this->tmpDir);
+        $manager->write('test');
+
+        $expected = sprintf('%s/%s/%s/%s.log',
+            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        );
+        $this->assertFileExists($expected);
+    }
 }
