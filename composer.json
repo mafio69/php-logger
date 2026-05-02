@@ -1,8 +1,10 @@
 {
     "name": "mariusz/php-logger",
-    "description": "Dual logger with file rotation, date-based structure and automatic anonymization of sensitive fields",
+    "description": "PSR-3 dual logger with file rotation, date-based structure and automatic anonymization of sensitive fields",
     "type": "library",
     "license": "MIT",
+    "keywords": ["logger", "psr-3", "log", "file-rotation", "anonymization", "laravel", "symfony"],
+    "homepage": "https://github.com/mafio69/php-logger",
     "authors": [
         {
             "name": "Mariusz Franciszczak",
@@ -19,9 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Mariusz\\Logger\\": "src/",
-            "Mariusz\\Logger\\Laravel\\": "src/Laravel/",
-            "Mariusz\\Logger\\Symfony\\": "src/Symfony/"
+            "Mariusz\\Logger\\": "src/"
         }
     },
     "autoload-dev": {
