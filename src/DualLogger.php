@@ -15,6 +15,7 @@ class DualLogger extends AbstractLogger
 {
     private ?LogFileManager $fileManager;
     private LogAnonymizer $anonymizer;
+    private LogContextSerializer $serializer;
     private int $minLevelValue;
     private string $dateFormat;
     private ?\DateTimeZone $timezone;
@@ -57,6 +58,7 @@ class DualLogger extends AbstractLogger
     ) {
         $this->fileManager   = $fileManager;
         $this->anonymizer    = new LogAnonymizer();
+        $this->serializer    = new LogContextSerializer();
         $this->minLevelValue = $this->levels[$minLevel] ?? $this->levels[LogLevel::WARNING];
         $this->dateFormat    = $dateFormat;
         $this->timezone      = $timezone !== '' ? new \DateTimeZone($timezone) : null;
@@ -64,7 +66,7 @@ class DualLogger extends AbstractLogger
 
     public function log($level, Stringable|string $message, array $context = []): void
     {
-        $entry = $this->format($level, $message, $this->anonymizer->anonymize($context));
+        $entry = $this->format($level, $message, $this->anonymizer->anonymize($this->serializer->serialize($context)));
 
         $this->writeToStderr($entry);
 
