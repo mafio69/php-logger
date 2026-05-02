@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "keywords": ["logger", "psr-3", "log", "file-rotation", "anonymization", "laravel", "symfony"],
-    "homepage": "https://github.com/mafio69/fast-php-logger",
+    "homepage": "https://github.com/mafio69/php-logger",
     "authors": [
         {
             "name": "Mariusz Franciszczak",

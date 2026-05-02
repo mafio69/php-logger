@@ -38,6 +38,6 @@ final class LoggerServiceProvider extends ServiceProvider
     {
         $this->publishes([
             __DIR__ . '/config/php-logger.php' => config_path('php-logger.php'),
-        ], 'php-logger-config');
+        ], 'fast-php-logger-config');
     }
 }

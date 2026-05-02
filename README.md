@@ -152,7 +152,7 @@ Publish config:
 php artisan vendor:publish --tag=fast-php-logger-config
 ```
 
-`config/fast-php-logger.php`:
+`config/php-logger.php`:
 
 ```php
 return [
