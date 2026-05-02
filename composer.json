@@ -1,10 +1,10 @@
 {
-    "name": "mafio69/php-logger",
+    "name": "mafio69/fast-php-logger",
     "description": "PSR-3 dual logger with file rotation, date-based structure and automatic anonymization of sensitive fields",
     "type": "library",
     "license": "MIT",
     "keywords": ["logger", "psr-3", "log", "file-rotation", "anonymization", "laravel", "symfony"],
-    "homepage": "https://github.com/mafio69/php-logger",
+    "homepage": "https://github.com/mafio69/fast-php-logger",
     "authors": [
         {
             "name": "Mariusz Franciszczak",

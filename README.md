@@ -1,4 +1,4 @@
-# mafio69/php-logger
+# mafio69/fast-php-logger
 
 PSR-3 compliant dual logger for PHP 8.1+ with:
 - date-based log file structure with configurable subdirectory pattern
@@ -11,7 +11,7 @@ PSR-3 compliant dual logger for PHP 8.1+ with:
 ## Installation
 
 ```sh
-composer require mafio69/php-logger
+composer require mafio69/fast-php-logger
 ```
 
 ## Quick start
@@ -149,10 +149,10 @@ Auto-discovered via `extra.laravel.providers`. No manual registration needed.
 Publish config:
 
 ```sh
-php artisan vendor:publish --tag=php-logger-config
+php artisan vendor:publish --tag=fast-php-logger-config
 ```
 
-`config/php-logger.php`:
+`config/fast-php-logger.php`:
 
 ```php
 return [
