@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Mariusz\Logger;
 
 use Psr\Log\AbstractLogger;
@@ -7,15 +9,17 @@ use Psr\Log\LogLevel;
 use Stringable;
 
 /**
- * A logger that writes all logs to STDERR (screen)
- * and delegates logs from WARNING level upwards to a log file manager.
+ * Logs all messages to STDERR and delegates file writes to LogFileManager.
  */
 class DualLogger extends AbstractLogger
 {
     private ?LogFileManager $fileManager;
     private LogAnonymizer $anonymizer;
+    private int $minLevelValue;
+    private string $dateFormat;
+    private ?\DateTimeZone $timezone;
 
-    /** @var array<string, int> PSR-3 compliant log level map. */
+    /** @var array<string, int> */
     private array $levels = [
         LogLevel::DEBUG     => 100,
         LogLevel::INFO      => 200,
@@ -28,39 +32,76 @@ class DualLogger extends AbstractLogger
     ];
 
     /**
-     * @param LogFileManager|null $fileManager Optional log file manager object.
+     * Quick factory: creates a DualLogger writing to $logDir with default settings.
      */
-    public function __construct(?LogFileManager $fileManager = null)
-    {
-        $this->fileManager = $fileManager;
-        $this->anonymizer  = new LogAnonymizer();
+    public static function create(
+        string $logDir,
+        string $minLevel = LogLevel::WARNING,
+        string $dateFormat = 'Y-m-d H:i:s',
+        string $timezone = '',
+    ): self {
+        return new self(new LogFileManager($logDir), $minLevel, $dateFormat, $timezone);
     }
 
     /**
-     * @param $level
-     * @param Stringable|string $message
-     * @param array $context
-     * @return void
+     * @param LogFileManager|null $fileManager Optional log file manager.
+     * @param string              $minLevel    Minimum PSR-3 level written to file (default: warning).
+     * @param string              $dateFormat  Date format for log entries (default: Y-m-d H:i:s).
+     * @param string              $timezone    Timezone for log timestamps (default: system timezone).
      */
+    public function __construct(
+        ?LogFileManager $fileManager = null,
+        string $minLevel = LogLevel::WARNING,
+        string $dateFormat = 'Y-m-d H:i:s',
+        string $timezone = '',
+    ) {
+        $this->fileManager   = $fileManager;
+        $this->anonymizer    = new LogAnonymizer();
+        $this->minLevelValue = $this->levels[$minLevel] ?? $this->levels[LogLevel::WARNING];
+        $this->dateFormat    = $dateFormat;
+        $this->timezone      = $timezone !== '' ? new \DateTimeZone($timezone) : null;
+    }
+
     public function log($level, Stringable|string $message, array $context = []): void
     {
-        $context = $this->anonymizer->anonymize($context);
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-        $caller = $trace[2] ?? $trace[1] ?? [];
-        $location = isset($caller['file'], $caller['line'])
+        $entry = $this->format($level, $message, $this->anonymizer->anonymize($context));
+
+        $this->writeToStderr($entry);
+
+        if ($this->meetsMinLevel($level)) {
+            $this->fileManager?->write($entry);
+        }
+    }
+
+    private function format(string $level, string $message, array $context): string
+    {
+        return sprintf("[%s] [%s] [%s] %s %s\n",
+            (new \DateTime('now', $this->timezone))->format($this->dateFormat),
+            strtoupper($level),
+            $this->resolveLocation(),
+            $message,
+            empty($context) ? '' : json_encode($context),
+        );
+    }
+
+    private function resolveLocation(): string
+    {
+        $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 4)[3] ?? [];
+
+        return isset($caller['file'], $caller['line'])
             ? sprintf('%s/%s:%d', basename(dirname($caller['file'])), basename($caller['file']), $caller['line'])
             : 'unknown';
+    }
 
-        $formattedMessage = sprintf("[%s] [%s] [%s] %s %s\n", date('Y-m-d H:i:s'), strtoupper($level), $location, $message, empty($context) ? '' : json_encode($context));
-
-        // 1. Write to the screen (STDERR) only if the constant is defined (i.e., in CLI mode) and not in test environment.
+    private function writeToStderr(string $entry): void
+    {
         if (defined('STDERR') && ($_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? getenv('APP_ENV')) !== 'test') {
-            fwrite(\STDERR, $formattedMessage);
+            fwrite(\STDERR, $entry);
         }
+    }
 
-        // 2. If a file manager is available and the log level is high enough, delegate the write operation.
-        if ($this->fileManager && ($this->levels[$level] ?? 0) >= $this->levels[LogLevel::WARNING]) {
-            $this->fileManager->write($formattedMessage);
-        }
+    private function meetsMinLevel(string $level): bool
+    {
+        return ($this->levels[$level] ?? 0) >= $this->minLevelValue;
     }
 }

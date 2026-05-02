@@ -19,12 +19,21 @@
     },
     "autoload": {
         "psr-4": {
-            "Mariusz\\Logger\\": "src/"
+            "Mariusz\\Logger\\": "src/",
+            "Mariusz\\Logger\\Laravel\\": "src/Laravel/",
+            "Mariusz\\Logger\\Symfony\\": "src/Symfony/"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "Mariusz\\Logger\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mariusz\\Logger\\Laravel\\LoggerServiceProvider"
+            ]
         }
     },
     "scripts": {
