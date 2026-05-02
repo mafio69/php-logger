@@ -29,6 +29,13 @@ final class Configuration implements ConfigurationInterface
                     ->scalarNode('date_structure')->defaultValue('Y/m')->end()
                 ->end()
             ->end()
+            ->arrayNode('stderr')
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->booleanNode('enabled')->defaultTrue()->end()
+                    ->booleanNode('skip_in_test')->defaultTrue()->end()
+                ->end()
+            ->end()
         ->end();
 
         return $tree;

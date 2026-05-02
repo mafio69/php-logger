@@ -31,6 +31,8 @@ final class PhpLoggerExtension extends Extension
                 $config['min_level'],
                 $config['date_format'],
                 $config['timezone'],
+                $config['stderr']['enabled'],
+                $config['stderr']['skip_in_test'],
             ])
             ->setPublic(true);
     }

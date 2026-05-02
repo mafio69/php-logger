@@ -19,6 +19,8 @@ class DualLogger extends AbstractLogger
     private int $minLevelValue;
     private string $dateFormat;
     private ?\DateTimeZone $timezone;
+    private bool $stderrEnabled;
+    private bool $stderrSkipInTest;
 
     /** @var array<string, int> */
     private array $levels = [
@@ -40,28 +42,38 @@ class DualLogger extends AbstractLogger
         string $minLevel = LogLevel::WARNING,
         string $dateFormat = 'Y-m-d H:i:s',
         string $timezone = '',
+        string $prefix = '',
+        string $suffix = '',
+        bool $stderrEnabled = true,
+        bool $stderrSkipInTest = true,
     ): self {
-        return new self(new LogFileManager($logDir), $minLevel, $dateFormat, $timezone);
+        return new self(new LogFileManager($logDir, prefix: $prefix, suffix: $suffix), $minLevel, $dateFormat, $timezone, $stderrEnabled, $stderrSkipInTest);
     }
 
     /**
-     * @param LogFileManager|null $fileManager Optional log file manager.
-     * @param string              $minLevel    Minimum PSR-3 level written to file (default: warning).
-     * @param string              $dateFormat  Date format for log entries (default: Y-m-d H:i:s).
-     * @param string              $timezone    Timezone for log timestamps (default: system timezone).
+     * @param LogFileManager|null $fileManager      Optional log file manager.
+     * @param string              $minLevel         Minimum PSR-3 level written to file (default: warning).
+     * @param string              $dateFormat       Date format for log entries (default: Y-m-d H:i:s).
+     * @param string              $timezone         Timezone for log timestamps (default: system timezone).
+     * @param bool                $stderrEnabled    Whether to write to STDERR at all (default: true).
+     * @param bool                $stderrSkipInTest Suppress STDERR when APP_ENV=test (default: true).
      */
     public function __construct(
         ?LogFileManager $fileManager = null,
         string $minLevel = LogLevel::WARNING,
         string $dateFormat = 'Y-m-d H:i:s',
         string $timezone = '',
+        bool $stderrEnabled = true,
+        bool $stderrSkipInTest = true,
     ) {
-        $this->fileManager   = $fileManager;
-        $this->anonymizer    = new LogAnonymizer();
-        $this->serializer    = new LogContextSerializer();
-        $this->minLevelValue = $this->levels[$minLevel] ?? $this->levels[LogLevel::WARNING];
-        $this->dateFormat    = $dateFormat;
-        $this->timezone      = $timezone !== '' ? new \DateTimeZone($timezone) : null;
+        $this->fileManager      = $fileManager;
+        $this->anonymizer       = new LogAnonymizer();
+        $this->serializer       = new LogContextSerializer();
+        $this->minLevelValue    = $this->levels[$minLevel] ?? $this->levels[LogLevel::WARNING];
+        $this->dateFormat       = $dateFormat;
+        $this->timezone         = $timezone !== '' ? new \DateTimeZone($timezone) : null;
+        $this->stderrEnabled    = $stderrEnabled;
+        $this->stderrSkipInTest = $stderrSkipInTest;
     }
 
     public function log($level, Stringable|string $message, array $context = []): void
@@ -97,9 +109,15 @@ class DualLogger extends AbstractLogger
 
     private function writeToStderr(string $entry): void
     {
-        if (defined('STDERR') && ($_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? getenv('APP_ENV')) !== 'test') {
-            fwrite(\STDERR, $entry);
+        if (!$this->stderrEnabled || !defined('STDERR')) {
+            return;
         }
+
+        if ($this->stderrSkipInTest && ($_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? getenv('APP_ENV')) === 'test') {
+            return;
+        }
+
+        fwrite(\STDERR, $entry);
     }
 
     private function meetsMinLevel(string $level): bool

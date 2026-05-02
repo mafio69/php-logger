@@ -15,4 +15,9 @@ return [
         'suffix'         => '',
         'date_structure' => 'Y/m',
     ],
+
+    'stderr' => [
+        'enabled'      => env('PHP_LOGGER_STDERR', true),
+        'skip_in_test' => true,
+    ],
 ];

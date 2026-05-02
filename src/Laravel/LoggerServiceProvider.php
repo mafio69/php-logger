@@ -30,6 +30,8 @@ final class LoggerServiceProvider extends ServiceProvider
                 $cfg['min_level'],
                 $cfg['date_format'],
                 $cfg['timezone'],
+                $cfg['stderr']['enabled'],
+                $cfg['stderr']['skip_in_test'],
             );
         });
     }
