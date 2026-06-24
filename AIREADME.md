@@ -39,15 +39,17 @@ Extends `Psr\Log\AbstractLogger`. Every `log()` call:
 ```
 DualLogger(
     ?LogFileManager $fileManager = null,
-    string $minLevel   = 'warning',       // PSR-3 level string
-    string $dateFormat = 'Y-m-d H:i:s',
-    string $timezone   = '',              // '' = system timezone
+    string $minLevel          = 'warning',
+    string $dateFormat        = 'Y-m-d H:i:s',
+    string $timezone          = '',
+    bool   $stderrEnabled     = true,
+    bool   $stderrSkipInTest  = true,
 )
 ```
 
 **Static factory**
 ```
-DualLogger::create(string $logDir, string $minLevel = 'warning', string $dateFormat = 'Y-m-d H:i:s', string $timezone = ''): self
+DualLogger::create(string $logDir, string $minLevel = 'warning', string $dateFormat = 'Y-m-d H:i:s', string $timezone = '', string $prefix = '', string $suffix = '', bool $stderrEnabled = true, bool $stderrSkipInTest = true): self
 ```
 
 **Log entry format**

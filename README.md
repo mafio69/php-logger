@@ -247,7 +247,7 @@ php artisan vendor:publish --tag=fast-php-logger-config
 ```php
 return [
     'log_dir'    => storage_path('logs'),
-    'min_level'  => env('LOG_LEVEL', 'warning'),
+    'min_level'  => env('FAST_PHP_LOGGER_MIN_LEVEL', env('LOG_LEVEL', 'warning')),
     'date_format' => 'Y-m-d H:i:s',
     'timezone'   => env('APP_TIMEZONE', ''),
     'file' => [

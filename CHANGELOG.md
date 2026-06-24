@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.1] — 2026-06-24
+
+### Added
+- LogContextSerializer — safe serialization of objects, exceptions, and resources in log context
+- AIREADME.md — machine-readable project summary for AI assistants
+
+### Fixed
+- LogAnonymizer TypeError on integer array keys
+
+### Changed
+- Refactored LogFileManager for better path resolution
+
 ## [0.9.1] — 2026-05-02
 
 ### Added
