@@ -50,7 +50,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results-php-${{ matrix.php-versions }}
           path: |
@@ -79,7 +79,7 @@ jobs:
         run: php bin/build.php
 
       - name: Upload release artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fast-php-logger-dist
           path: dist/fast-php-logger.php
