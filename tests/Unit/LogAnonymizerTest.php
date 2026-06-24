@@ -74,4 +74,19 @@ final class LogAnonymizerTest extends TestCase
     {
         $this->assertSame([], $this->anonymizer->anonymize([]));
     }
+
+    public function testIndexedArrayDoesNotCrash(): void
+    {
+        $result = $this->anonymizer->anonymize([
+            'results' => [
+                'file1.log',
+                'file2.log',
+            ],
+        ]);
+
+        $this->assertIsArray($result['results']);
+        $this->assertCount(2, $result['results']);
+        $this->assertSame('file1.log', $result['results'][0]);
+        $this->assertSame('file2.log', $result['results'][1]);
+    }
 }

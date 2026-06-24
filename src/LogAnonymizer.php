@@ -51,7 +51,7 @@ final class LogAnonymizer
         foreach ($context as $key => $value) {
             if (is_array($value)) {
                 $context[$key] = $this->anonymize($value);
-            } elseif (is_string($value) && $this->isSensitive($key)) {
+            } elseif (is_string($value) && is_string($key) && $this->isSensitive($key)) {
                 $context[$key] = $this->mask($value);
             }
         }
