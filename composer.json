@@ -37,6 +37,6 @@
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit -c phpunit.xml"
     }
 }

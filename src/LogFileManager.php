@@ -90,10 +90,12 @@ class LogFileManager
     {
         clearstatcache(true, $path);
 
-        for ($i = $this->maxFiles; $i > 0; $i--) {
+        for ($i = $this->maxFiles - 1; $i >= 1; $i--) {
             $source = $path . '.' . $i;
-            if (file_exists($source) && $i < $this->maxFiles) {
-                rename($source, $path . '.' . ($i + 1));
+            $target = $path . '.' . ($i + 1);
+
+            if (file_exists($source)) {
+                rename($source, $target);
             }
         }
 
