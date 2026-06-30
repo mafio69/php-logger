@@ -94,7 +94,7 @@ class DualLogger extends AbstractLogger
     {
         return sprintf(
             "[%s] [%s] [%s] %s %s\n",
-            (new \DateTime('now', $this->timezone))->format($this->dateFormat),
+            (new \DateTimeImmutable('now', $this->timezone))->format($this->dateFormat),
             strtoupper($level),
             $this->resolveLocation(),
             $message,
