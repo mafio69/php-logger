@@ -2,151 +2,172 @@
 
 declare(strict_types=1);
 
-namespace Mariusz\Logger\Tests\Unit;
+namespace Mariusz\Logger\Tests;
 
 use Mariusz\Logger\DualLogger;
+use Mariusz\Logger\LogAnonymizer;
+use Mariusz\Logger\LogContextSerializer;
 use Mariusz\Logger\LogFileManager;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
 
 final class DualLoggerTest extends TestCase
 {
+    private MockObject|LogFileManager $fileManager;
+    private MockObject|LogAnonymizer $anonymizer;
+    private MockObject|LogContextSerializer $serializer;
+
+    protected function setUp(): void
+    {
+        $this->fileManager = $this->createMock(LogFileManager::class);
+        $this->anonymizer = $this->createMock(LogAnonymizer::class);
+        $this->serializer = $this->createMock(LogContextSerializer::class);
+
+        // Default behavior for mocks to avoid setting it in every test
+        $this->serializer->method('serialize')->willReturnArgument(0);
+        $this->anonymizer->method('anonymize')->willReturnArgument(0);
+    }
+
+    private function createLogger(
+        string $minLevel = LogLevel::WARNING,
+        string $dateFormat = 'Y-m-d H:i:s',
+        string $timezone = '',
+        bool $stderrEnabled = false,
+        bool $stderrSkipInTest = true
+    ): DualLogger {
+        return new DualLogger(
+            $this->fileManager,
+            $this->anonymizer,
+            $this->serializer,
+            $minLevel,
+            $dateFormat,
+            $timezone,
+            $stderrEnabled,
+            $stderrSkipInTest
+        );
+    }
+
     public function testInfoDoesNotWriteToFile(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->never())->method('write');
-
-        $logger = new DualLogger($fileManager);
+        $this->fileManager->expects($this->never())->method('write');
+        $logger = $this->createLogger();
         $logger->info('just info');
     }
 
     public function testWarningWritesToFile(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write')
+        $this->fileManager->expects($this->once())->method('write')
             ->with($this->stringContains('[WARNING]'));
-
-        $logger = new DualLogger($fileManager);
+        $logger = $this->createLogger();
         $logger->warning('something wrong');
     }
 
     public function testErrorWritesToFile(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write');
-
-        $logger = new DualLogger($fileManager);
+        $this->fileManager->expects($this->once())->method('write');
+        $logger = $this->createLogger();
         $logger->error('an error');
     }
 
     public function testContextIsSerialized(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write')
-            ->with($this->stringContains('"username":"jankowalski"'));
+        $context = ['username' => 'jankowalski'];
+        $this->serializer->expects($this->once())
+            ->method('serialize')
+            ->with($context)
+            ->willReturn($context); // Return the same context for simplicity
 
-        $logger = new DualLogger($fileManager);
-        $logger->warning('msg', ['username' => 'jankowalski']);
+        $this->fileManager->expects($this->once())->method('write')
+            ->with($this->stringContains(json_encode($context)));
+
+        $logger = $this->createLogger();
+        $logger->warning('msg', $context);
     }
 
     public function testSensitiveContextIsAnonymized(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write')
-            ->with($this->logicalAnd(
-                $this->stringContains('****'),
-                $this->logicalNot($this->stringContains('supersecret123'))
-            ));
+        $context = ['token' => 'supersecret123'];
+        $anonymizedContext = ['token' => '****'];
 
-        $logger = new DualLogger($fileManager);
-        $logger->warning('auth', ['token' => 'supersecret123']);
+        $this->serializer->expects($this->once())->method('serialize')->with($context)->willReturn($context);
+        $this->anonymizer->expects($this->once())->method('anonymize')->with($context)->willReturn($anonymizedContext);
+
+        $this->fileManager->expects($this->once())->method('write')
+            ->with($this->stringContains(json_encode($anonymizedContext)));
+
+        $logger = $this->createLogger();
+        $logger->warning('auth', $context);
     }
 
     public function testLogMessageContainsTimestamp(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write')
+        $this->fileManager->expects($this->once())->method('write')
             ->with($this->matchesRegularExpression('/\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/'));
-
-        $logger = new DualLogger($fileManager);
+        $logger = $this->createLogger();
         $logger->warning('ts check');
     }
 
     public function testLogMessageContainsCallerLocation(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write')
+        $this->fileManager->expects($this->once())->method('write')
             ->with($this->matchesRegularExpression('/\[\w+\/\w+\.php:\d+\]/'));
-
-        $logger = new DualLogger($fileManager);
+        $logger = $this->createLogger();
         $logger->warning('location check');
     }
 
     public function testWorksWithoutFileManager(): void
     {
-        $logger = new DualLogger();
-        // Should not throw
+        $logger = new DualLogger(null, $this->anonymizer, $this->serializer);
         $logger->info('no file manager');
-        $this->assertTrue(true);
+        $this->assertTrue(true); // Should not throw
     }
 
     public function testMinLevelDebugWritesInfoToFile(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write');
-
-        $logger = new DualLogger($fileManager, minLevel: LogLevel::DEBUG);
+        $this->fileManager->expects($this->once())->method('write');
+        $logger = $this->createLogger(LogLevel::DEBUG);
         $logger->info('should be written');
     }
 
     public function testMinLevelErrorSkipsWarning(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->never())->method('write');
-
-        $logger = new DualLogger($fileManager, minLevel: LogLevel::ERROR);
+        $this->fileManager->expects($this->never())->method('write');
+        $logger = $this->createLogger(LogLevel::ERROR);
         $logger->warning('should be skipped');
     }
 
     public function testMinLevelErrorWritesError(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write');
-
-        $logger = new DualLogger($fileManager, minLevel: LogLevel::ERROR);
+        $this->fileManager->expects($this->once())->method('write');
+        $logger = $this->createLogger(LogLevel::ERROR);
         $logger->error('should be written');
     }
 
     public function testDefaultMinLevelIsWarning(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->never())->method('write');
-
-        $logger = new DualLogger($fileManager);
+        $this->fileManager->expects($this->never())->method('write');
+        $logger = $this->createLogger();
         $logger->notice('below warning — should not write');
     }
 
     public function testCustomDateFormat(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
-        $fileManager->expects($this->once())->method('write')
+        $this->fileManager->expects($this->once())->method('write')
             ->with($this->matchesRegularExpression('/\[\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}\]/'));
-
-        $logger = new DualLogger($fileManager, dateFormat: 'd.m.Y H:i');
+        $logger = $this->createLogger(LogLevel::WARNING, 'd.m.Y H:i');
         $logger->warning('custom format');
     }
 
     public function testCustomTimezoneIsApplied(): void
     {
-        $fileManager = $this->createMock(LogFileManager::class);
         $captured = '';
-        $fileManager->expects($this->once())->method('write')
+        $this->fileManager->expects($this->once())->method('write')
             ->willReturnCallback(function (string $msg) use (&$captured) { $captured = $msg; });
 
-        $logger = new DualLogger($fileManager, timezone: 'UTC');
+        $logger = $this->createLogger(LogLevel::WARNING, 'Y-m-d H:i:s', 'UTC');
         $logger->warning('tz test');
 
-        // Extract timestamp from log entry and verify it's a valid datetime
         preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $captured, $matches);
         $this->assertNotEmpty($matches[1]);
         $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $matches[1], new \DateTimeZone('UTC'));

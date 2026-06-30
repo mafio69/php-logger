@@ -10,7 +10,7 @@ namespace Mariusz\Logger;
  * Handles: scalars, null, arrays (recursive), Throwable, objects with __toString,
  * objects with toArray/jsonSerialize, generic objects (public properties), resources.
  */
-final class LogContextSerializer
+class LogContextSerializer
 {
     /**
      * Recursively serialize all values in a context array.

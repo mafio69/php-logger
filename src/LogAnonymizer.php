@@ -9,7 +9,7 @@ namespace Mariusz\Logger;
  * Replaces the middle portion of sensitive values with **** to preserve
  * readability while protecting personal/sensitive data.
  */
-final class LogAnonymizer
+class LogAnonymizer
 {
     /**
      * Field names (case-insensitive) whose values will be partially masked.
