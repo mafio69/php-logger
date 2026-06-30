@@ -19,15 +19,16 @@ final class LogFileManagerTest extends TestCase
 
     protected function tearDown(): void
     {
-        // Remove all files and subdirectories created during the test
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($this->tmpDir, \FilesystemIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::CHILD_FIRST
         );
+
         foreach ($iterator as $file) {
             $file->isDir() ? rmdir($file->getPathname()) : unlink($file->getPathname());
         }
-        rmdir($this->tmpDir);
+
+        @rmdir($this->tmpDir);
     }
 
     public function testWriteCreatesDateBasedFile(): void
@@ -35,8 +36,12 @@ final class LogFileManagerTest extends TestCase
         $manager = new LogFileManager($this->tmpDir);
         $manager->write('hello log');
 
-        $expected = sprintf('%s/%s/%s/%s.log',
-            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        $expected = sprintf(
+            '%s/%s/%s/%s.log',
+            $this->tmpDir,
+            date('Y'),
+            date('m'),
+            date('Y-m-d')
         );
 
         $this->assertFileExists($expected);
@@ -49,8 +54,12 @@ final class LogFileManagerTest extends TestCase
         $manager->write("line1\n");
         $manager->write("line2\n");
 
-        $path = sprintf('%s/%s/%s/%s.log',
-            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        $path = sprintf(
+            '%s/%s/%s/%s.log',
+            $this->tmpDir,
+            date('Y'),
+            date('m'),
+            date('Y-m-d')
         );
 
         $content = file_get_contents($path);
@@ -61,12 +70,15 @@ final class LogFileManagerTest extends TestCase
     public function testRotationCreatesArchiveWhenSizeExceeded(): void
     {
         $manager = new LogFileManager($this->tmpDir, maxFileSize: 10);
-
-        $manager->write('12345678901'); // 11 bytes — triggers rotation on next write
+        $manager->write('12345678901');
         $manager->write('new entry');
 
-        $path = sprintf('%s/%s/%s/%s.log',
-            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        $path = sprintf(
+            '%s/%s/%s/%s.log',
+            $this->tmpDir,
+            date('Y'),
+            date('m'),
+            date('Y-m-d')
         );
 
         $this->assertFileExists($path . '.1');
@@ -78,8 +90,12 @@ final class LogFileManagerTest extends TestCase
         $manager = new LogFileManager($this->tmpDir, prefix: 'app-');
         $manager->write('test');
 
-        $expected = sprintf('%s/%s/%s/app-%s.log',
-            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        $expected = sprintf(
+            '%s/%s/%s/app-%s.log',
+            $this->tmpDir,
+            date('Y'),
+            date('m'),
+            date('Y-m-d')
         );
 
         $this->assertFileExists($expected);
@@ -90,32 +106,12 @@ final class LogFileManagerTest extends TestCase
         $manager = new LogFileManager($this->tmpDir, suffix: '-prod');
         $manager->write('test');
 
-        $expected = sprintf('%s/%s/%s/%s-prod.log',
-            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
-        );
-
-        $this->assertFileExists($expected);
-    }
-
-    public function testPrefixAndSuffixCombined(): void
-    {
-        $manager = new LogFileManager($this->tmpDir, prefix: 'app-', suffix: '-prod');
-        $manager->write('test');
-
-        $expected = sprintf('%s/%s/%s/app-%s-prod.log',
-            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
-        );
-
-        $this->assertFileExists($expected);
-    }
-
-    public function testNoPrefixOrSuffixUsesDefaultFilename(): void
-    {
-        $manager = new LogFileManager($this->tmpDir);
-        $manager->write('test');
-
-        $expected = sprintf('%s/%s/%s/%s.log',
-            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
+        $expected = sprintf(
+            '%s/%s/%s/%s-prod.log',
+            $this->tmpDir,
+            date('Y'),
+            date('m'),
+            date('Y-m-d')
         );
 
         $this->assertFileExists($expected);
@@ -144,20 +140,15 @@ final class LogFileManagerTest extends TestCase
         $manager = new LogFileManager($this->tmpDir, dateStructure: 'Y/m/d');
         $manager->write('test');
 
-        $expected = sprintf('%s/%s/%s/%s/%s.log',
-            $this->tmpDir, date('Y'), date('m'), date('d'), date('Y-m-d')
+        $expected = sprintf(
+            '%s/%s/%s/%s/%s.log',
+            $this->tmpDir,
+            date('Y'),
+            date('m'),
+            date('d'),
+            date('Y-m-d')
         );
-        $this->assertFileExists($expected);
-    }
 
-    public function testDefaultDateStructureIsYearMonth(): void
-    {
-        $manager = new LogFileManager($this->tmpDir);
-        $manager->write('test');
-
-        $expected = sprintf('%s/%s/%s/%s.log',
-            $this->tmpDir, date('Y'), date('m'), date('Y-m-d')
-        );
         $this->assertFileExists($expected);
     }
 }

@@ -87,17 +87,26 @@ final class DualLoggerTest extends TestCase
 
     public function testSensitiveContextIsAnonymized(): void
     {
-        $context = ['token' => 'supersecret123'];
-        $anonymizedContext = ['token' => '****'];
+        $this->fileManager->expects($this->once())
+            ->method('write')
+            ->with($this->callback(function (string $entry): bool {
+                $this->assertStringContainsString('auth', $entry);
+                $this->assertStringContainsString('token', $entry);
+                $this->assertStringNotContainsString('supersecret123', $entry);
+                $this->assertStringContainsString('****', $entry);
 
-        $this->serializer->expects($this->once())->method('serialize')->with($context)->willReturn($context);
-        $this->anonymizer->expects($this->once())->method('anonymize')->with($context)->willReturn($anonymizedContext);
+                return true;
+            }));
 
-        $this->fileManager->expects($this->once())->method('write')
-            ->with($this->stringContains(json_encode($anonymizedContext)));
+        // Test with real dependencies by passing null
+        $logger = new DualLogger(
+            $this->fileManager,
+            null,
+            null,
+            LogLevel::DEBUG
+        );
 
-        $logger = $this->createLogger();
-        $logger->warning('auth', $context);
+        $logger->warning('auth', ['token' => 'supersecret123']);
     }
 
     public function testLogMessageContainsTimestamp(): void

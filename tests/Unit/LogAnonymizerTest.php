@@ -19,18 +19,21 @@ final class LogAnonymizerTest extends TestCase
     public function testShortValueBecomesOnlyAsterisks(): void
     {
         $result = $this->anonymizer->anonymize(['token' => 'ab']);
+
         $this->assertSame('****', $result['token']);
     }
 
     public function testExactlyFourCharsBecomesOnlyAsterisks(): void
     {
         $result = $this->anonymizer->anonymize(['password' => 'abcd']);
+
         $this->assertSame('****', $result['password']);
     }
 
     public function testLongerValueHasVisibleStartAndEnd(): void
     {
         $result = $this->anonymizer->anonymize(['pesel' => '12345678901']);
+
         $this->assertStringStartsWith('1', $result['pesel']);
         $this->assertStringEndsWith('1', $result['pesel']);
         $this->assertStringContainsString('****', $result['pesel']);
@@ -39,6 +42,7 @@ final class LogAnonymizerTest extends TestCase
     public function testEmailIsMasked(): void
     {
         $result = $this->anonymizer->anonymize(['email' => 'jan.kowalski@gmail.com']);
+
         $this->assertStringContainsString('****', $result['email']);
         $this->assertNotSame('jan.kowalski@gmail.com', $result['email']);
     }
@@ -46,13 +50,16 @@ final class LogAnonymizerTest extends TestCase
     public function testNonSensitiveFieldIsUntouched(): void
     {
         $result = $this->anonymizer->anonymize(['username' => 'jankowalski']);
+
         $this->assertSame('jankowalski', $result['username']);
     }
 
     public function testFieldNameIsCaseInsensitive(): void
     {
         $result = $this->anonymizer->anonymize(['TOKEN' => 'supersecret123']);
+
         $this->assertStringContainsString('****', $result['TOKEN']);
+        $this->assertStringNotContainsString('supersecret123', $result['TOKEN']);
     }
 
     public function testNestedArrayIsAnonymized(): void
@@ -60,6 +67,7 @@ final class LogAnonymizerTest extends TestCase
         $result = $this->anonymizer->anonymize([
             'user' => ['email' => 'test@example.com', 'name' => 'Jan'],
         ]);
+
         $this->assertStringContainsString('****', $result['user']['email']);
         $this->assertSame('Jan', $result['user']['name']);
     }
@@ -67,6 +75,7 @@ final class LogAnonymizerTest extends TestCase
     public function testNonStringValueIsUntouched(): void
     {
         $result = $this->anonymizer->anonymize(['pesel' => 12345678901]);
+
         $this->assertSame(12345678901, $result['pesel']);
     }
 
@@ -75,18 +84,26 @@ final class LogAnonymizerTest extends TestCase
         $this->assertSame([], $this->anonymizer->anonymize([]));
     }
 
-    public function testIndexedArrayDoesNotCrash(): void
+    public function testPolishSensitiveFieldIsMasked(): void
+    {
+        $result = $this->anonymizer->anonymize(['hasło' => 'tajnehaslo']);
+
+        $this->assertStringContainsString('****', $result['hasło']);
+        $this->assertStringNotContainsString('tajnehaslo', $result['hasło']);
+    }
+
+    public function testIndexedArrayInsideSensitiveFieldIsPreservedStructure(): void
     {
         $result = $this->anonymizer->anonymize([
-            'results' => [
+            'token' => [
                 'file1.log',
                 'file2.log',
             ],
         ]);
 
-        $this->assertIsArray($result['results']);
-        $this->assertCount(2, $result['results']);
-        $this->assertSame('file1.log', $result['results'][0]);
-        $this->assertSame('file2.log', $result['results'][1]);
+        $this->assertIsArray($result['token']);
+        $this->assertCount(2, $result['token']);
+        $this->assertSame('file1.log', $result['token'][0]);
+        $this->assertSame('file2.log', $result['token'][1]);
     }
 }
