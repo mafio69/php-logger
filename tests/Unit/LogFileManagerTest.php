@@ -151,4 +151,20 @@ final class LogFileManagerTest extends TestCase
 
         $this->assertFileExists($expected);
     }
+
+    public function testRotationShiftsMultipleArchives(): void
+    {
+        $manager = new LogFileManager($this->tmpDir, maxFileSize: 10);
+        $manager->write('12345678901');
+        $manager->write('12345678901');
+        $manager->write('12345678901');
+        $manager->write('new');
+
+        $base = sprintf('%s/%s/%s/%s.log', $this->tmpDir, date('Y'), date('m'), date('Y-m-d'));
+        $this->assertFileExists($base);
+        $this->assertFileExists($base . '.1');
+        $this->assertFileExists($base . '.2');
+        $this->assertFileExists($base . '.3');
+        $this->assertStringContainsString('new', file_get_contents($base));
+    }
 }

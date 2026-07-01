@@ -124,4 +124,23 @@ final class LogContextSerializerTest extends TestCase
 
         $this->assertSame('stdClass', $result['obj']);
     }
+
+    public function testToArrayHasPriorityOverToString(): void
+    {
+        $obj = new class {
+            public function toArray(): array
+            {
+                return ['from' => 'toArray'];
+            }
+
+            public function __toString(): string
+            {
+                return 'fromToString';
+            }
+        };
+
+        $result = $this->s->serialize(['obj' => $obj]);
+
+        $this->assertSame(['from' => 'toArray'], $result['obj']);
+    }
 }

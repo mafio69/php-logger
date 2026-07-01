@@ -182,4 +182,30 @@ final class DualLoggerTest extends TestCase
         $dt = \DateTime::createFromFormat('Y-m-d H:i:s', $matches[1], new \DateTimeZone('UTC'));
         $this->assertInstanceOf(\DateTime::class, $dt);
     }
+
+    public function testStaticCreateWorks(): void
+    {
+        $logger = DualLogger::create(sys_get_temp_dir() . '/log_create_test');
+        $this->assertInstanceOf(DualLogger::class, $logger);
+    }
+
+    public function testUnknownMinLevelFallsBackToWarning(): void
+    {
+        $this->fileManager->expects($this->never())->method('write');
+        $logger = $this->createLogger('nieistniejacy_level');
+        $logger->notice('should be skipped');
+    }
+
+    public function testLogWithStringableMessage(): void
+    {
+        $this->fileManager->expects($this->once())->method('write')
+            ->with($this->stringContains('logged object'));
+        $logger = $this->createLogger(LogLevel::DEBUG);
+        $logger->info(new class {
+            public function __toString(): string
+            {
+                return 'logged object';
+            }
+        });
+    }
 }

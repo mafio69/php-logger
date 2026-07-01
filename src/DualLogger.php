@@ -81,7 +81,7 @@ class DualLogger extends AbstractLogger
 
     public function log($level, Stringable|string $message, array $context = []): void
     {
-        $entry = $this->format($level, $message, $this->anonymizer->anonymize($this->serializer->serialize($context)));
+        $entry = $this->format($level, (string) $message, $this->anonymizer->anonymize($this->serializer->serialize($context)));
 
         $this->writeToStderr($entry);
 

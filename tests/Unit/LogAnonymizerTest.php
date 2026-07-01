@@ -106,4 +106,11 @@ final class LogAnonymizerTest extends TestCase
         $this->assertSame('file1.log', $result['token'][0]);
         $this->assertSame('file2.log', $result['token'][1]);
     }
+
+    public function testEmptyStringIsMasked(): void
+    {
+        $result = $this->anonymizer->anonymize(['token' => '']);
+
+        $this->assertSame('****', $result['token']);
+    }
 }
