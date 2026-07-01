@@ -227,7 +227,7 @@ $logger = new DualLogger(fileManager: $fm, config: $config);
 $cfg = $logger->getConfig();
 echo $cfg->minLevel;       // 'debug'
 echo $cfg->dateFormat;     // 'Y-m-d H:i:s'
-echo $cfg->timezone;       // 'Europe/Warsaw'
+echo $cfg->timezone;       // '' (empty string = system default)
 echo $cfg->stderrEnabled;  // true
 echo $cfg->stderrSkipInTest; // true
 ```
