@@ -1,6 +1,6 @@
 <?php
 /**
- * fast-php-logger — single-file build (v0.9.1-20-g4a7846c) — 2026-07-01
+ * fast-php-logger — single-file build (v0.9.1-21-gabd9999) — 2026-07-01
  * https://github.com/mafio69/php-logger
  *
  * Usage:
@@ -471,7 +471,7 @@ class LogFileManager
         }
 
         $this->ensureDirectory($path);
-        file_put_contents($path, $message, FILE_APPEND);
+        file_put_contents($path, $message, FILE_APPEND | LOCK_EX);
     }
 
     /**
