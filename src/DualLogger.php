@@ -34,6 +34,7 @@ class DualLogger extends AbstractLogger
         LogLevel::ALERT     => 700,
         LogLevel::EMERGENCY => 800,
     ];
+    private string $minLevel;
 
     public static function create(
         string $logDir,
@@ -71,6 +72,7 @@ class DualLogger extends AbstractLogger
         $this->timezone         = $this->config->timezone !== '' ? new DateTimeZone($this->config->timezone) : null;
         $this->stderrEnabled    = $this->config->stderrEnabled;
         $this->stderrSkipInTest = $this->config->stderrSkipInTest;
+        $this->minLevel         = $this->config->minLevel;
     }
 
     public function getConfig(): LoggerConfigDto
@@ -80,8 +82,8 @@ class DualLogger extends AbstractLogger
 
     public function log($level, Stringable|string $message, array $context = []): void
     {
-        if (!array_key_exists($level, $this->levels)) {
-            throw new InvalidArgumentException(sprintf('Unknown log level "%s".', $level));
+        if (!isset($this->levels[$level])) {
+            throw new InvalidArgumentException("Unknown log level \"$level\".");
         }
 
         $entry = $this->format($level, (string) $message, $this->anonymizer->anonymize($this->serializer->serialize($context)));
