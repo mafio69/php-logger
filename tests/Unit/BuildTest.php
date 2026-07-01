@@ -15,13 +15,6 @@ final class BuildTest extends TestCase
         $this->distFile = dirname(__DIR__, 2) . '/dist/fast-php-logger.php';
     }
 
-    protected function tearDown(): void
-    {
-        if (isset($this->distFile) && is_file($this->distFile)) {
-            $this->assertTrue(true);
-        }
-    }
-
     public function testDistFileExists(): void
     {
         $this->assertFileExists(

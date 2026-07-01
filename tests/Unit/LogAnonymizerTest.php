@@ -92,7 +92,7 @@ final class LogAnonymizerTest extends TestCase
         $this->assertStringNotContainsString('tajnehaslo', $result['hasło']);
     }
 
-    public function testIndexedArrayInsideSensitiveFieldIsPreservedStructure(): void
+    public function testIndexedArrayInsideSensitiveFieldIsMasked(): void
     {
         $result = $this->anonymizer->anonymize([
             'token' => [
@@ -103,8 +103,10 @@ final class LogAnonymizerTest extends TestCase
 
         $this->assertIsArray($result['token']);
         $this->assertCount(2, $result['token']);
-        $this->assertSame('file1.log', $result['token'][0]);
-        $this->assertSame('file2.log', $result['token'][1]);
+        $this->assertStringContainsString('****', $result['token'][0]);
+        $this->assertStringContainsString('****', $result['token'][1]);
+        $this->assertStringNotContainsString('file1.log', $result['token'][0]);
+        $this->assertStringNotContainsString('file2.log', $result['token'][1]);
     }
 
     public function testEmptyStringIsMasked(): void
