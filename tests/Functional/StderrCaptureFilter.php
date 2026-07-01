@@ -13,6 +13,8 @@ final class StderrCaptureFilter extends \php_user_filter
 {
     private static string $captured = '';
     private static bool $registered = false;
+    /** @var resource|null */
+    private static $filterHandle = null;
 
     public static function start(): void
     {
@@ -22,11 +24,16 @@ final class StderrCaptureFilter extends \php_user_filter
         }
 
         self::$captured = '';
-        stream_filter_append(\STDERR, 'stderr_capture');
+        self::$filterHandle = stream_filter_append(\STDERR, 'stderr_capture');
     }
 
     public static function stop(): string
     {
+        if (self::$filterHandle !== null) {
+            stream_filter_remove(self::$filterHandle);
+            self::$filterHandle = null;
+        }
+
         $captured = self::$captured;
         self::$captured = '';
         return $captured;
