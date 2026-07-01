@@ -12,11 +12,17 @@ namespace Mariusz\Logger\Tests\Functional;
 final class StderrCaptureFilter extends \php_user_filter
 {
     private static string $captured = '';
+    private static bool $registered = false;
 
     public static function start(): void
     {
+        if (!self::$registered) {
+            stream_filter_register('stderr_capture', self::class);
+            self::$registered = true;
+        }
+
         self::$captured = '';
-        stream_filter_append(\STDERR, self::class);
+        stream_filter_append(\STDERR, 'stderr_capture');
     }
 
     public static function stop(): string
