@@ -7,6 +7,7 @@ namespace Mariusz\Logger;
 use DateTimeZone;
 use Mariusz\Logger\Dto\LoggerConfigDto;
 use Psr\Log\AbstractLogger;
+use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
 use Stringable;
 
@@ -81,6 +82,10 @@ class DualLogger extends AbstractLogger
 
     public function log($level, Stringable|string $message, array $context = []): void
     {
+        if (!array_key_exists($level, $this->levels)) {
+            throw new InvalidArgumentException(sprintf('Unknown log level "%s".', $level));
+        }
+
         $entry = $this->format($level, (string) $message, $this->anonymizer->anonymize($this->serializer->serialize($context)));
 
         $this->writeToStderr($entry);

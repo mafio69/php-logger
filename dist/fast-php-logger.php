@@ -1,6 +1,6 @@
 <?php
 /**
- * fast-php-logger — single-file build (v0.9.1-9-gf510e4a) — 2026-07-01
+ * fast-php-logger — single-file build (v0.9.1-19-g63e76d7) — 2026-07-01
  * https://github.com/mafio69/php-logger
  *
  * Usage:
@@ -512,8 +512,9 @@ class LogFileManager
 namespace Mariusz\Logger;
 
 use DateTimeZone;
-use Mariusz\Logger\Config\LoggerConfigDto;
+use Mariusz\Logger\Dto\LoggerConfigDto;
 use Psr\Log\AbstractLogger;
+use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
 use Stringable;
 
@@ -522,6 +523,7 @@ class DualLogger extends AbstractLogger
     private LogFileManager|null $fileManager;
     private LogAnonymizer $anonymizer;
     private LogContextSerializer $serializer;
+    private LoggerConfigDto $config;
     private int $minLevelValue;
     private string $dateFormat;
     private ?DateTimeZone $timezone;
@@ -568,20 +570,29 @@ class DualLogger extends AbstractLogger
         ?LogContextSerializer $serializer = null,
         ?LoggerConfigDto $config = null,
     ) {
-        $config               ??= new LoggerConfigDto();
+        $this->config             = $config ?? new LoggerConfigDto();
         $this->fileManager      = $fileManager;
         $this->anonymizer       = $anonymizer ?? new LogAnonymizer();
         $this->serializer       = $serializer ?? new LogContextSerializer();
-        $this->minLevelValue    = $this->levels[$config->minLevel] ?? $this->levels[LogLevel::WARNING];
-        $this->dateFormat       = $config->dateFormat;
-        $this->timezone         = $config->timezone !== '' ? new DateTimeZone($config->timezone) : null;
-        $this->stderrEnabled    = $config->stderrEnabled;
-        $this->stderrSkipInTest = $config->stderrSkipInTest;
-        $this->minLevel         = $config->minLevel;
+        $this->minLevelValue    = $this->levels[$this->config->minLevel] ?? $this->levels[LogLevel::WARNING];
+        $this->dateFormat       = $this->config->dateFormat;
+        $this->timezone         = $this->config->timezone !== '' ? new DateTimeZone($this->config->timezone) : null;
+        $this->stderrEnabled    = $this->config->stderrEnabled;
+        $this->stderrSkipInTest = $this->config->stderrSkipInTest;
+        $this->minLevel         = $this->config->minLevel;
+    }
+
+    public function getConfig(): LoggerConfigDto
+    {
+        return $this->config;
     }
 
     public function log($level, Stringable|string $message, array $context = []): void
     {
+        if (!array_key_exists($level, $this->levels)) {
+            throw new InvalidArgumentException(sprintf('Unknown log level "%s".', $level));
+        }
+
         $entry = $this->format($level, (string) $message, $this->anonymizer->anonymize($this->serializer->serialize($context)));
 
         $this->writeToStderr($entry);
