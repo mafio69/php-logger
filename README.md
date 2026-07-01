@@ -1,6 +1,6 @@
 # mafio69/fast-php-logger
 
-PSR-3 compliant dual logger for PHP 8.1+ with:
+PSR-3 compliant dual logger for PHP 8.2+ with:
 - date-based log file structure with configurable subdirectory pattern
 - automatic log rotation by file size
 - caller location in every log entry (`directory/file.php:line`)
@@ -28,7 +28,7 @@ $logger->info('Hello');
 ```
 
 - Zero dependencies — PSR-3 interfaces are bundled inside
-- Works with PHP 8.1+
+- Works with PHP 8.2+
 - Identical API to the Composer version
 
 **Building the file yourself:**
