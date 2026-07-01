@@ -43,7 +43,7 @@ final class StderrCaptureFilter extends \php_user_filter
     {
         while ($bucket = \stream_bucket_make_writeable($in)) {
             self::$captured .= $bucket->data;
-            $consumed += $bucket->datalen;
+            $consumed += (int) $bucket->datalen;
         }
 
         return \PSFS_PASS_ON;
