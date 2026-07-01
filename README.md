@@ -1,6 +1,6 @@
 # mafio69/fast-php-logger
 
-PSR-3 compliant dual logger for PHP 8.1+ with:
+PSR-3 compliant dual logger for PHP 8.2+ with:
 - date-based log file structure with configurable subdirectory pattern
 - automatic log rotation by file size
 - caller location in every log entry (`directory/file.php:line`)
@@ -28,7 +28,7 @@ $logger->info('Hello');
 ```
 
 - Zero dependencies — PSR-3 interfaces are bundled inside
-- Works with PHP 8.1+
+- Works with PHP 8.2+
 - Identical API to the Composer version
 
 **Building the file yourself:**
@@ -46,11 +46,12 @@ php bin/build.php  # generates dist/fast-php-logger.php
 require_once 'fast-php-logger.php';
 
 use Mariusz\Logger\DualLogger;
+use Mariusz\Logger\Dto\LoggerConfigDto;
 use Mariusz\Logger\LogFileManager;
 use Psr\Log\LogLevel;
 
 $logger = new DualLogger(
-    new LogFileManager(
+    fileManager: new LogFileManager(
         logDir:        './logs',
         maxFileSize:   1048576,       // 1MB before rotation
         maxFiles:      5,             // keep 5 archives
@@ -58,11 +59,13 @@ $logger = new DualLogger(
         suffix:        '',
         dateStructure: 'Y/m',         // → logs/2026/05/
     ),
-    minLevel:         LogLevel::WARNING,    // only warning and above go to file
-    dateFormat:       'Y-m-d H:i:s',
-    timezone:         'Europe/Warsaw',
-    stderrEnabled:    true,                 // set false to disable STDERR entirely
-    stderrSkipInTest: true,                 // suppress STDERR when APP_ENV=test
+    config: new LoggerConfigDto(
+        minLevel:         LogLevel::WARNING,    // only warning and above go to file
+        dateFormat:       'Y-m-d H:i:s',
+        timezone:         'Europe/Warsaw',
+        stderrEnabled:    true,                 // set false to disable STDERR entirely
+        stderrSkipInTest: true,                 // suppress STDERR when APP_ENV=test
+    ),
 );
 ```
 
@@ -104,12 +107,13 @@ Need more control? Use the full constructor — but you probably won't need to:
 
 ```php
 use Mariusz\Logger\DualLogger;
+use Mariusz\Logger\Dto\LoggerConfigDto;
 use Mariusz\Logger\LogFileManager;
 use Psr\Log\LogLevel;
 
 $logger = new DualLogger(
-    new LogFileManager('./logs', maxFileSize: 512000, maxFiles: 10),
-    minLevel: LogLevel::DEBUG,
+    fileManager: new LogFileManager('./logs', maxFileSize: 512000, maxFiles: 10),
+    config:      new LoggerConfigDto(minLevel: LogLevel::DEBUG),
 );
 ```
 
@@ -153,12 +157,14 @@ new LogFileManager(
 
 ```php
 new DualLogger(
-    fileManager:      new LogFileManager('./logs'),
-    minLevel:         LogLevel::WARNING,   // minimum level written to file (default: warning)
-    dateFormat:       'Y-m-d H:i:s',      // timestamp format (default: ISO-like)
-    timezone:         'Europe/Warsaw',     // timezone (default: system timezone)
-    stderrEnabled:    true,               // write to STDERR at all (default: true)
-    stderrSkipInTest: true,               // suppress STDERR when APP_ENV=test (default: true)
+    fileManager: new LogFileManager('./logs'),
+    config:      new LoggerConfigDto(
+        minLevel:         LogLevel::WARNING,   // minimum level written to file (default: warning)
+        dateFormat:       'Y-m-d H:i:s',      // timestamp format (default: ISO-like)
+        timezone:         'Europe/Warsaw',     // timezone (default: system timezone)
+        stderrEnabled:    true,               // write to STDERR at all (default: true)
+        stderrSkipInTest: true,               // suppress STDERR when APP_ENV=test (default: true)
+    ),
 )
 ```
 
@@ -186,6 +192,45 @@ new DualLogger(
 | `true` (default) | `true` (default) | STDERR active, suppressed when `APP_ENV=test` |
 | `true` | `false` | STDERR always active, even in tests |
 | `false` | *(ignored)* | STDERR disabled entirely |
+
+---
+
+### LoggerConfigDto
+
+DTO grupujący wszystkie parametry konfiguracyjne loggera (poza `fileManager`).
+
+```php
+use Mariusz\Logger\Dto\LoggerConfigDto;
+use Psr\Log\LogLevel;
+
+$config = new LoggerConfigDto(
+    minLevel:         LogLevel::WARNING,   // minimum level written to file
+    dateFormat:       'Y-m-d H:i:s',      // timestamp format
+    timezone:         'Europe/Warsaw',     // timezone (empty = system default)
+    stderrEnabled:    true,               // write to STDERR
+    stderrSkipInTest: true,               // suppress STDERR when APP_ENV=test
+);
+```
+
+Wszystkie parametry mają wartości domyślne, więc można podać tylko te, które chcesz zmienić:
+
+```php
+$config = new LoggerConfigDto(minLevel: LogLevel::DEBUG);
+```
+
+#### Dostęp do konfiguracji
+
+```php
+$logger = new DualLogger(fileManager: $fm, config: $config);
+
+// Pobierz config
+$cfg = $logger->getConfig();
+echo $cfg->minLevel;       // 'debug'
+echo $cfg->dateFormat;     // 'Y-m-d H:i:s'
+echo $cfg->timezone;       // '' (empty string = system default)
+echo $cfg->stderrEnabled;  // true
+echo $cfg->stderrSkipInTest; // true
+```
 
 ---
 
@@ -221,13 +266,17 @@ By default STDERR is suppressed when `APP_ENV=test`. Set in `phpunit.xml`:
 To disable STDERR entirely (regardless of environment):
 
 ```php
-new DualLogger(stderrEnabled: false);
+use Mariusz\Logger\Dto\LoggerConfigDto;
+
+new DualLogger(config: new LoggerConfigDto(stderrEnabled: false));
 ```
 
 To keep STDERR active even in tests:
 
 ```php
-new DualLogger(stderrSkipInTest: false);
+use Mariusz\Logger\Dto\LoggerConfigDto;
+
+new DualLogger(config: new LoggerConfigDto(stderrSkipInTest: false));
 ```
 
 ---

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Mariusz\Logger;
 
 use DateTimeZone;
+use Mariusz\Logger\Dto\LoggerConfigDto;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use Stringable;
@@ -14,6 +15,7 @@ class DualLogger extends AbstractLogger
     private LogFileManager|null $fileManager;
     private LogAnonymizer $anonymizer;
     private LogContextSerializer $serializer;
+    private LoggerConfigDto $config;
     private int $minLevelValue;
     private string $dateFormat;
     private ?DateTimeZone $timezone;
@@ -47,11 +49,7 @@ class DualLogger extends AbstractLogger
             new LogFileManager($logDir, prefix: $prefix, suffix: $suffix),
             null,
             null,
-            $minLevel,
-            $dateFormat,
-            $timezone,
-            $stderrEnabled,
-            $stderrSkipInTest
+            new LoggerConfigDto($minLevel, $dateFormat, $timezone, $stderrEnabled, $stderrSkipInTest),
         );
     }
 
@@ -62,21 +60,23 @@ class DualLogger extends AbstractLogger
         ?LogFileManager $fileManager = null,
         ?LogAnonymizer $anonymizer = null,
         ?LogContextSerializer $serializer = null,
-        string $minLevel = LogLevel::WARNING,
-        string $dateFormat = 'Y-m-d H:i:s',
-        string $timezone = '',
-        bool $stderrEnabled = true,
-        bool $stderrSkipInTest = true,
+        ?LoggerConfigDto $config = null,
     ) {
+        $this->config             = $config ?? new LoggerConfigDto();
         $this->fileManager      = $fileManager;
         $this->anonymizer       = $anonymizer ?? new LogAnonymizer();
         $this->serializer       = $serializer ?? new LogContextSerializer();
-        $this->minLevelValue    = $this->levels[$minLevel] ?? $this->levels[LogLevel::WARNING];
-        $this->dateFormat       = $dateFormat;
-        $this->timezone         = $timezone !== '' ? new DateTimeZone($timezone) : null;
-        $this->stderrEnabled    = $stderrEnabled;
-        $this->stderrSkipInTest = $stderrSkipInTest;
-        $this->minLevel         = $minLevel;
+        $this->minLevelValue    = $this->levels[$this->config->minLevel] ?? $this->levels[LogLevel::WARNING];
+        $this->dateFormat       = $this->config->dateFormat;
+        $this->timezone         = $this->config->timezone !== '' ? new DateTimeZone($this->config->timezone) : null;
+        $this->stderrEnabled    = $this->config->stderrEnabled;
+        $this->stderrSkipInTest = $this->config->stderrSkipInTest;
+        $this->minLevel         = $this->config->minLevel;
+    }
+
+    public function getConfig(): LoggerConfigDto
+    {
+        return $this->config;
     }
 
     public function log($level, Stringable|string $message, array $context = []): void

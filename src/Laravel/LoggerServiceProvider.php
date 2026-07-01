@@ -6,6 +6,7 @@ namespace Mariusz\Logger\Laravel;
 
 use Illuminate\Support\ServiceProvider;
 use Mariusz\Logger\DualLogger;
+use Mariusz\Logger\Dto\LoggerConfigDto;
 use Mariusz\Logger\LogFileManager;
 
 final class LoggerServiceProvider extends ServiceProvider
@@ -27,11 +28,15 @@ final class LoggerServiceProvider extends ServiceProvider
                     $file['suffix'],
                     $file['date_structure'],
                 ),
-                $cfg['min_level'],
-                $cfg['date_format'],
-                $cfg['timezone'],
-                $cfg['stderr']['enabled'],
-                $cfg['stderr']['skip_in_test'],
+                null,
+                null,
+                new LoggerConfigDto(
+                    $cfg['min_level'],
+                    $cfg['date_format'],
+                    $cfg['timezone'],
+                    $cfg['stderr']['enabled'],
+                    $cfg['stderr']['skip_in_test'],
+                ),
             );
         });
     }
