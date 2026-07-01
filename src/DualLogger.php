@@ -34,7 +34,6 @@ class DualLogger extends AbstractLogger
         LogLevel::ALERT     => 700,
         LogLevel::EMERGENCY => 800,
     ];
-    private string $minLevel;
 
     public static function create(
         string $logDir,
@@ -72,7 +71,6 @@ class DualLogger extends AbstractLogger
         $this->timezone         = $this->config->timezone !== '' ? new DateTimeZone($this->config->timezone) : null;
         $this->stderrEnabled    = $this->config->stderrEnabled;
         $this->stderrSkipInTest = $this->config->stderrSkipInTest;
-        $this->minLevel         = $this->config->minLevel;
     }
 
     public function getConfig(): LoggerConfigDto
