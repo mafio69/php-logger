@@ -1,6 +1,6 @@
 <?php
 /**
- * fast-php-logger — single-file build (v1.0.0-4-g9c68b62) — 2026-05-02
+ * fast-php-logger — single-file build (v0.9.1-9-gf510e4a) — 2026-07-01
  * https://github.com/mafio69/php-logger
  *
  * Usage:
@@ -241,7 +241,7 @@ namespace Mariusz\Logger;
  * Replaces the middle portion of sensitive values with **** to preserve
  * readability while protecting personal/sensitive data.
  */
-final class LogAnonymizer
+class LogAnonymizer
 {
     /**
      * Field names (case-insensitive) whose values will be partially masked.
@@ -283,7 +283,7 @@ final class LogAnonymizer
         foreach ($context as $key => $value) {
             if (is_array($value)) {
                 $context[$key] = $this->anonymize($value);
-            } elseif (is_string($value) && $this->isSensitive($key)) {
+            } elseif (is_string($value) && is_string($key) && $this->isSensitive($key)) {
                 $context[$key] = $this->mask($value);
             }
         }
@@ -327,7 +327,7 @@ namespace Mariusz\Logger;
  * Handles: scalars, null, arrays (recursive), Throwable, objects with __toString,
  * objects with toArray/jsonSerialize, generic objects (public properties), resources.
  */
-final class LogContextSerializer
+class LogContextSerializer
 {
     /**
      * Recursively serialize all values in a context array.
@@ -494,10 +494,12 @@ class LogFileManager
     {
         clearstatcache(true, $path);
 
-        for ($i = $this->maxFiles; $i > 0; $i--) {
+        for ($i = $this->maxFiles - 1; $i >= 1; $i--) {
             $source = $path . '.' . $i;
-            if (file_exists($source) && $i < $this->maxFiles) {
-                rename($source, $path . '.' . ($i + 1));
+            $target = $path . '.' . ($i + 1);
+
+            if (file_exists($source)) {
+                rename($source, $target);
             }
         }
 
@@ -509,21 +511,20 @@ class LogFileManager
 
 namespace Mariusz\Logger;
 
+use DateTimeZone;
+use Mariusz\Logger\Config\LoggerConfigDto;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 use Stringable;
 
-/**
- * Logs all messages to STDERR and delegates file writes to LogFileManager.
- */
 class DualLogger extends AbstractLogger
 {
-    private ?LogFileManager $fileManager;
+    private LogFileManager|null $fileManager;
     private LogAnonymizer $anonymizer;
     private LogContextSerializer $serializer;
     private int $minLevelValue;
     private string $dateFormat;
-    private ?\DateTimeZone $timezone;
+    private ?DateTimeZone $timezone;
     private bool $stderrEnabled;
     private bool $stderrSkipInTest;
 
@@ -538,10 +539,8 @@ class DualLogger extends AbstractLogger
         LogLevel::ALERT     => 700,
         LogLevel::EMERGENCY => 800,
     ];
+    private string $minLevel;
 
-    /**
-     * Quick factory: creates a DualLogger writing to $logDir with default settings.
-     */
     public static function create(
         string $logDir,
         string $minLevel = LogLevel::WARNING,
@@ -552,33 +551,33 @@ class DualLogger extends AbstractLogger
         bool $stderrEnabled = true,
         bool $stderrSkipInTest = true,
     ): self {
-        return new self(new LogFileManager($logDir, prefix: $prefix, suffix: $suffix), $minLevel, $dateFormat, $timezone, $stderrEnabled, $stderrSkipInTest);
+        return new self(
+            new LogFileManager($logDir, prefix: $prefix, suffix: $suffix),
+            null,
+            null,
+            new LoggerConfigDto($minLevel, $dateFormat, $timezone, $stderrEnabled, $stderrSkipInTest),
+        );
     }
 
     /**
-     * @param LogFileManager|null $fileManager      Optional log file manager.
-     * @param string              $minLevel         Minimum PSR-3 level written to file (default: warning).
-     * @param string              $dateFormat       Date format for log entries (default: Y-m-d H:i:s).
-     * @param string              $timezone         Timezone for log timestamps (default: system timezone).
-     * @param bool                $stderrEnabled    Whether to write to STDERR at all (default: true).
-     * @param bool                $stderrSkipInTest Suppress STDERR when APP_ENV=test (default: true).
+     * @throws \DateInvalidTimeZoneException
      */
     public function __construct(
         ?LogFileManager $fileManager = null,
-        string $minLevel = LogLevel::WARNING,
-        string $dateFormat = 'Y-m-d H:i:s',
-        string $timezone = '',
-        bool $stderrEnabled = true,
-        bool $stderrSkipInTest = true,
+        ?LogAnonymizer $anonymizer = null,
+        ?LogContextSerializer $serializer = null,
+        ?LoggerConfigDto $config = null,
     ) {
+        $config               ??= new LoggerConfigDto();
         $this->fileManager      = $fileManager;
-        $this->anonymizer       = new LogAnonymizer();
-        $this->serializer       = new LogContextSerializer();
-        $this->minLevelValue    = $this->levels[$minLevel] ?? $this->levels[LogLevel::WARNING];
-        $this->dateFormat       = $dateFormat;
-        $this->timezone         = $timezone !== '' ? new \DateTimeZone($timezone) : null;
-        $this->stderrEnabled    = $stderrEnabled;
-        $this->stderrSkipInTest = $stderrSkipInTest;
+        $this->anonymizer       = $anonymizer ?? new LogAnonymizer();
+        $this->serializer       = $serializer ?? new LogContextSerializer();
+        $this->minLevelValue    = $this->levels[$config->minLevel] ?? $this->levels[LogLevel::WARNING];
+        $this->dateFormat       = $config->dateFormat;
+        $this->timezone         = $config->timezone !== '' ? new DateTimeZone($config->timezone) : null;
+        $this->stderrEnabled    = $config->stderrEnabled;
+        $this->stderrSkipInTest = $config->stderrSkipInTest;
+        $this->minLevel         = $config->minLevel;
     }
 
     public function log($level, Stringable|string $message, array $context = []): void
@@ -594,7 +593,8 @@ class DualLogger extends AbstractLogger
 
     private function format(string $level, string $message, array $context): string
     {
-        return sprintf("[%s] [%s] [%s] %s %s\n",
+        return sprintf(
+            "[%s] [%s] [%s] %s %s\n",
             (new \DateTimeImmutable('now', $this->timezone))->format($this->dateFormat),
             strtoupper($level),
             $this->resolveLocation(),

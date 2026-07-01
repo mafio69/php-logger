@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Mariusz\Logger\Tests;
 
+use Mariusz\Logger\Dto\LoggerConfigDto;
 use Mariusz\Logger\DualLogger;
 use Mariusz\Logger\LogAnonymizer;
 use Mariusz\Logger\LogContextSerializer;
@@ -40,11 +41,7 @@ final class DualLoggerTest extends TestCase
             $this->fileManager,
             $this->anonymizer,
             $this->serializer,
-            $minLevel,
-            $dateFormat,
-            $timezone,
-            $stderrEnabled,
-            $stderrSkipInTest
+            new LoggerConfigDto($minLevel, $dateFormat, $timezone, $stderrEnabled, $stderrSkipInTest),
         );
     }
 
@@ -103,7 +100,7 @@ final class DualLoggerTest extends TestCase
             $this->fileManager,
             null,
             null,
-            LogLevel::DEBUG
+            new LoggerConfigDto(LogLevel::DEBUG),
         );
 
         $logger->warning('auth', ['token' => 'supersecret123']);
