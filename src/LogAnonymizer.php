@@ -50,13 +50,30 @@ class LogAnonymizer
     {
         foreach ($context as $key => $value) {
             if (is_array($value)) {
-                $context[$key] = $this->anonymize($value);
+                $context[$key] = (is_string($key) && $this->isSensitive($key))
+                    ? $this->maskBranch($value)
+                    : $this->anonymize($value);
             } elseif (is_string($value) && is_string($key) && $this->isSensitive($key)) {
                 $context[$key] = $this->mask($value);
             }
         }
 
         return $context;
+    }
+
+    /**
+     * Masks all string leaves in a branch, preserving structure.
+     * Non-string values (int, bool, etc.) are left untouched.
+     *
+     * @param array<mixed> $value
+     * @return array<mixed>
+     */
+    private function maskBranch(array $value): array
+    {
+        foreach ($value as $k => $v) {
+            $value[$k] = is_array($v) ? $this->maskBranch($v) : (is_string($v) ? $this->mask($v) : $v);
+        }
+        return $value;
     }
 
     private function isSensitive(string $key): bool
