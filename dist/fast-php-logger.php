@@ -1,6 +1,6 @@
 <?php
 /**
- * fast-php-logger — single-file build (v0.9.1-34-geb8a000) — 2026-07-01
+ * fast-php-logger — single-file build (v0.9.1-37-gc159ae9) — 2026-07-01
  * https://github.com/mafio69/php-logger
  *
  * Usage:
@@ -24,6 +24,12 @@ class LogLevel
     const NOTICE    = 'notice';
     const INFO      = 'info';
     const DEBUG     = 'debug';
+}
+
+namespace Psr\Log;
+
+class InvalidArgumentException extends \InvalidArgumentException
+{
 }
 
 namespace Psr\Log;
@@ -232,6 +238,22 @@ namespace Psr\Log;
 abstract class AbstractLogger implements LoggerInterface
 {
     use LoggerTrait;
+}
+
+namespace Mariusz\Logger\Dto;
+
+use Psr\Log\LogLevel;
+
+final class LoggerConfigDto
+{
+    public function __construct(
+        public readonly string $minLevel = LogLevel::WARNING,
+        public readonly string $dateFormat = 'Y-m-d H:i:s',
+        public readonly string $timezone = '',
+        public readonly bool $stderrEnabled = true,
+        public readonly bool $stderrSkipInTest = true,
+    ) {
+    }
 }
 
 namespace Mariusz\Logger;
@@ -558,6 +580,7 @@ class DualLogger extends AbstractLogger
         LogLevel::ALERT     => 700,
         LogLevel::EMERGENCY => 800,
     ];
+    private string $minLevel;
 
     public static function create(
         string $logDir,
@@ -595,6 +618,7 @@ class DualLogger extends AbstractLogger
         $this->timezone         = $this->config->timezone !== '' ? new DateTimeZone($this->config->timezone) : null;
         $this->stderrEnabled    = $this->config->stderrEnabled;
         $this->stderrSkipInTest = $this->config->stderrSkipInTest;
+        $this->minLevel         = $this->config->minLevel;
     }
 
     public function getConfig(): LoggerConfigDto
@@ -604,8 +628,8 @@ class DualLogger extends AbstractLogger
 
     public function log($level, Stringable|string $message, array $context = []): void
     {
-        if (!array_key_exists($level, $this->levels)) {
-            throw new InvalidArgumentException(sprintf('Unknown log level "%s".', $level));
+        if (!isset($this->levels[$level])) {
+            throw new InvalidArgumentException("Unknown log level \"$level\".");
         }
 
         $entry = $this->format($level, (string) $message, $this->anonymizer->anonymize($this->serializer->serialize($context)));
