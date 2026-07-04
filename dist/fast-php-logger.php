@@ -1,6 +1,6 @@
 <?php
 /**
- * fast-php-logger — single-file build (v0.9.1-37-gc159ae9) — 2026-07-01
+ * fast-php-logger — single-file build (v0.9.1-38-gf7db4bc) — 2026-07-01
  * https://github.com/mafio69/php-logger
  *
  * Usage:
