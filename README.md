@@ -197,7 +197,7 @@ new DualLogger(
 
 ### LoggerConfigDto
 
-DTO grupujący wszystkie parametry konfiguracyjne loggera (poza `fileManager`).
+DTO grouping all logger configuration parameters (except `fileManager`).
 
 ```php
 use Mariusz\Logger\Dto\LoggerConfigDto;
@@ -212,18 +212,18 @@ $config = new LoggerConfigDto(
 );
 ```
 
-Wszystkie parametry mają wartości domyślne, więc można podać tylko te, które chcesz zmienić:
+All parameters have default values, so you only need to pass the ones you want to change:
 
 ```php
 $config = new LoggerConfigDto(minLevel: LogLevel::DEBUG);
 ```
 
-#### Dostęp do konfiguracji
+#### Accessing the configuration
 
 ```php
 $logger = new DualLogger(fileManager: $fm, config: $config);
 
-// Pobierz config
+// Get config
 $cfg = $logger->getConfig();
 echo $cfg->minLevel;       // 'debug'
 echo $cfg->dateFormat;     // 'Y-m-d H:i:s'
