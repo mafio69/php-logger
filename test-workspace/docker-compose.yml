@@ -1,0 +1,8 @@
+services:
+  php:
+    build: .
+    volumes:
+      - ./app:/app
+      - ..:/repo
+    working_dir: /app
+    command: ["sh", "-c", "composer install --no-interaction --no-progress && exec php run.php"]

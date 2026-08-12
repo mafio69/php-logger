@@ -5,4 +5,8 @@ composer.lock
 coverage/
 .idea/
 *.log
+logs/
 temp/
+test-workspace/app/logs/
+test-workspace/app/vendor/
+test-workspace/app/.phpunit.result.cache

@@ -1,0 +1,21 @@
+{
+    "name": "test-workspace/logger-smoke",
+    "type": "project",
+    "description": "Live smoke test for mafio69/fast-php-logger — runs in Docker against the local source.",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "/repo",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "mafio69/fast-php-logger": "*"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
