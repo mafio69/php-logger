@@ -11,6 +11,7 @@ use Mariusz\Logger\LogContextSerializer;
 use Mariusz\Logger\LogFileManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\InvalidArgumentException;
 use Psr\Log\LogLevel;
 
 final class DualLoggerTest extends TestCase
@@ -204,5 +205,14 @@ final class DualLoggerTest extends TestCase
                 return 'logged object';
             }
         });
+    }
+
+    public function testUnknownLevelThrowsException(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown log level "nieistnieje".');
+
+        $logger = $this->createLogger();
+        $logger->log('nieistnieje', 'test message');
     }
 }

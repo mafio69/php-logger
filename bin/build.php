@@ -16,9 +16,11 @@ $out  = $root . '/dist/fast-php-logger.php';
 // Order matters: dependencies first
 $files = [
     $root . '/vendor/psr/log/src/LogLevel.php',
+    $root . '/vendor/psr/log/src/InvalidArgumentException.php',
     $root . '/vendor/psr/log/src/LoggerInterface.php',
     $root . '/vendor/psr/log/src/LoggerTrait.php',
     $root . '/vendor/psr/log/src/AbstractLogger.php',
+    $root . '/src/Dto/LoggerConfigDto.php',
     $root . '/src/LogAnonymizer.php',
     $root . '/src/LogContextSerializer.php',
     $root . '/src/LogFileManager.php',

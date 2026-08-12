@@ -50,7 +50,7 @@ class LogFileManager
         }
 
         $this->ensureDirectory($path);
-        file_put_contents($path, $message, FILE_APPEND);
+        file_put_contents($path, $message, FILE_APPEND | LOCK_EX);
     }
 
     /**
