@@ -23,7 +23,9 @@
         "illuminate/support": "^10.0",
         "illuminate/container": "^10.0",
         "vlucas/phpdotenv": "^5.6",
-        "illuminate/config": "^10.0"
+        "illuminate/config": "^10.0",
+        "phpstan/phpstan": "^1.10",
+        "friendsofphp/php-cs-fixer": "^3.95"
     },
     "autoload": {
         "psr-4": {
@@ -43,7 +45,14 @@
         }
     },
     "scripts": {
-        "test": "phpunit -c phpunit.xml"
+        "test": "phpunit -c phpunit.xml",
+        "check:all": [
+            "@phpstan",
+            "@cs:check"
+        ],
+        "phpstan": "phpstan analyse src tests",
+        "cs:check": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix"
     },
     "config": {
         "platform": {

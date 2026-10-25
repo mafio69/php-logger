@@ -64,7 +64,8 @@ class LogFileManager
     {
         $subDir = $this->dateStructure !== '' ? '/' . date($this->dateStructure) : '';
 
-        return sprintf('%s%s/%s%s%s.log',
+        return sprintf(
+            '%s%s/%s%s%s.log',
             $this->logDir,
             $subDir,
             $this->prefix,

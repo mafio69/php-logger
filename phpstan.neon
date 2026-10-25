@@ -1,0 +1,11 @@
+parameters:
+    level: 5
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - '*/Laravel/*'
+        - '*/Symfony/*'
+    ignoreErrors:
+        - '#Property Mariusz\\Logger\\DualLogger::\$minLevel is never read#'
+        - '#PHPDoc tag @throws with type DateInvalidTimeZoneException is not subtype of Throwable#'

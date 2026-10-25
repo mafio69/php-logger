@@ -1,73 +1,73 @@
-# AGENTS.md
+# AGENTS.md — globalne zasady pracy agentów AI
 
-Authoritative instructions for AI coding assistants working in this repository.
-Keep this file short, specific, and current. If it conflicts with a casual chat
-request, this file wins.
+Ten plik obowiązuje każdego agenta AI uruchomionego lokalnie lub zdalnie, w tym OpenCode, Claude Code oraz agentów wywoływanych przez IDE, CLI, rozszerzenia i MCP. Obowiązuje niezależnie od katalogu, repozytorium, języka i rodzaju zadania.
 
-## Working principles
+## 1. Tryb pracy
 
-- Prefer the simplest solution that fully solves the task. No speculative code.
-- Follow SOLID, KISS and DRY pragmatically — abstract on the second real need, not "for the future".
-- Keep controllers thin: accept a request, return a response. Business logic lives in services.
-- One responsibility per class and per method. If the description needs an "and", split it.
-- Make small, reviewable, surgical changes. Touch only what the task requires; do not refactor untouched code.
-- Fix root causes, not symptoms. No workarounds layered on workarounds.
-- Match the existing style of the file you are editing.
+- Odpowiadaj i pytaj użytkownika po polsku, o ile użytkownik wyraźnie nie poprosi o inny język.
+- Stosuj zasadę najmniejszych uprawnień. Nie proś o dostęp, którego nie potrzebujesz do bieżącego zadania.
+- Nie uruchamiaj trybu automatycznego zatwierdzania uprawnień (`--auto`, auto-approve ani odpowiednika).
+- Nie uruchamiaj subagentów ani agentów pomocniczych bez wyraźnej zgody użytkownika.
+- Nie wysyłaj kodu, danych, plików ani fragmentów konfiguracji do internetu, zewnętrznego API, repozytorium lub usługi bez osobnej zgody użytkownika.
+- Nie zmieniaj konfiguracji agenta, plików uprawnień ani tego pliku bez wyraźnej prośby użytkownika.
 
-## Quality gates (PHP)
+## 2. Sekrety i dane wrażliwe — zakaz bez wyjątków
 
-Before declaring a change done, it must pass:
+Obowiązuje absolutny zakaz czytania, przeszukiwania, kopiowania, dekodowania, wyświetlania, przesyłania i modyfikowania sekretów — każdym narzędziem, również Bash.
 
-```bash
-composer install
-vendor/bin/phpunit
-vendor/bin/phpstan analyse
-vendor/bin/php-cs-fixer fix --dry-run --diff
-```
+Za dane chronione uznaje się w szczególności:
 
-If the repo uses Docker, run these inside the `app` container.
-If autoload breaks, verify namespace mapping and run `composer dump-autoload` first.
-(For non-PHP repos, apply the equivalent lint/test/static-analysis gates.)
+- `.env`, `.env.*`, `.env.keys`, katalogi `secret/` i `.local/secret/`
+- `~/.ssh/**`, `~/.aws/**`, `~/.config/gcloud/**`, `~/.kube/**`, `~/.gnupg/**`
+- klucze i certyfikaty: `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.jks`, `id_rsa*`, `id_ed25519*`
+- pliki i nazwy zawierające `secret`, `token`, `credential`, `client_secret`, `service-account`
+- hasła, tokeny API, ciasteczka sesyjne, nagłówki Authorization, dane logowania, prywatne adresy, kopie baz danych oraz dane osobowe.
 
-## Change policy
+Zakazane są także polecenia lub ich warianty, które mogą ujawnić sekret, między innymi:
 
-- Do not add dependencies unless the task truly needs them.
-- Do not weaken, skip, or delete checks just to make tests or CI pass.
-- Do not commit dead code; mention it instead of silently deleting unrelated code.
-- Tests must be honest: no fake/stub methods pretending to work, no trivial asserts
-  (`assertTrue(true)`), no assertions weakened to pass. Use dummy secrets in tests.
+- `cat`, `less`, `more`, `head`, `tail`, `strings`, `xxd`, `od`, `base64` użyte na chronionych plikach lub katalogach
+- `env`, `printenv`, `export -p`, `set` i ich przekierowania lub filtrowanie
+- `dotenvx get`, `dotenvx run`, `command -v`, `dotenvx decrypt` oraz używanie `.env.keys`
+- `gcloud auth print-access-token`, `gcloud auth print-identity-token` i polecenia eksportujące poświadczenia
+- kopiowanie sekretów do logów, testów, komunikatów błędów, commitów, PR-ów i odpowiedzi dla użytkownika.
 
-## Secrets — hard rules
+Jeżeli zadanie wymaga sekretu, zatrzymaj się i poproś użytkownika o wykonanie czynności lokalnie. Nie proś o wklejenie sekretu do czatu ani terminala.
 
-- DO NOT read, open, print, or expose secrets.
-- DO NOT ask to edit `.env*` files. DO NOT open or print them.
-- Always refer to a variable/token by NAME, never by its value.
-- Use dummy/placeholder secrets in tests and examples.
-- Real production secrets should not live on any machine running a coding agent.
+## 3. Granice katalogu roboczego
 
-## Do not touch
+- Pracuj wyłącznie w aktualnym katalogu roboczym, czyli katalogu, z którego uruchomiono agenta, oraz w jego podkatalogach.
+- Nie odczytuj, nie zapisuj, nie wyszukuj i nie listuj plików poza aktualnym katalogiem roboczym.
+- Nie używaj ścieżek bezwzględnych, `~`, `$HOME`, `..`, `../`, `/tmp`, `/etc`, `/var`, `/usr`, `/opt`, `/home` ani innych ścieżek prowadzących poza katalog roboczy.
+- Nie zmieniaj katalogu przez `cd` poza aktualny katalog roboczy.
+- Nie skanuj systemu plików, katalogu domowego ani dysków w celu „znalezienia” plików, narzędzi, konfiguracji lub projektów.
+- Wyjątek jest możliwy wyłącznie po wyraźnej zgodzie użytkownika dla wskazanej ścieżki i pojedynczej czynności.
 
-- DO NOT modify anything inside `vendor/` or `node_modules/`.
-- DO NOT make changes without explicit permission when the task is ambiguous — ask first.
+## 4. Bash i polecenia systemowe
 
-## Scratch / task files
+- Każde polecenie Bash wymaga uprzedniej zgody użytkownika. Nie zakładaj zgody na kolejne polecenia na podstawie wcześniejszej zgody.
+- Przed prośbą o zgodę podaj pełne polecenie, jego cel, katalog wykonania oraz wpływ na pliki, sieć i system.
+- Nie używaj `sudo`, `su`, `pkexec`, `doas`, `docker exec`, `kubectl exec`, SSH, SCP, RSYNC, montowania dysków ani poleceń zdalnych bez osobnej, jednoznacznej zgody użytkownika.
+- Nie instaluj, nie usuwaj i nie aktualizuj pakietów, zależności, kontenerów, obrazów, rozszerzeń ani narzędzi bez zgody użytkownika.
+- Nie uruchamiaj poleceń destrukcyjnych lub potencjalnie kosztownych bez wyraźnej zgody: `rm`, `find -delete`, `truncate`, `dd`, `mkfs`, `chmod -R`, `chown -R`, `git reset --hard`, `git clean`, `docker system prune`, masowych migracji i masowych zmian plików.
+- Nie pobieraj ani nie wykonuj skryptów z internetu, zwłaszcza wzorca `curl ... | sh`, `wget ... | bash` lub podobnych.
+- Nie uruchamiaj komend do rozpoznawania środowiska, lokalizacji binarek lub dystrybucji bez pytania. Dotyczy to także `command -v tree`, `command -v *`, `which *`, `type *`, `whereis *`, `locate *`, `find *`, `ls` poza katalogiem roboczym, `uname`, `hostnamectl`, `lsb_release`, `cat /etc/os-release` i podobnych.
 
-- `.local/` is the only place for AI scratch, notes, and task files.
-- `.local/` must never reach git (it is git-ignored).
-- Never put real secrets in `.local/` — `.local/secret/` is denied even to the agent.
+## 5. Sieć i usługi zewnętrzne
 
-## Technical enforcement (this file alone is not enough)
+- Dostęp do internetu, `webfetch`, `websearch`, API, MCP, GitHub, GitLab, Docker Hub, npm, Composer, PyPI i innych usług wymaga zgody użytkownika dla konkretnej czynności.
+- Nie wykonuj `git push`, nie twórz issue, PR, release, tagu, commitu ani nie zmieniaj zdalnego repozytorium bez wyraźnej zgody użytkownika.
+- Przed każdą operacją wysyłającą dane poza komputer poinformuj dokładnie, jakie dane i do jakiej usługi zostaną przekazane.
 
-This file is guidance to the model, not a technical guarantee — it can be ignored.
-The real barrier is `opencode.json` in this repo:
+## 6. Edycja i jakość
 
-- `permission.task = deny` — subagents disabled (a known bug can let them bypass `deny`).
-- `permission.external_directory = deny` — the agent cannot read outside this repo.
-- `permission.bash = ask`, `permission.webfetch = ask` — no silent shell or network.
-- `read`/`edit`/`glob`/`grep` deny everything dot-prefixed except `.github/`,
-  `.opencode/`, `.local/` (and a few config dotfiles), plus deny secrets, keys,
-  `vendor/` and `node_modules/`.
+- Przed zmianą kodu lub konfiguracji pokaż plan zmian i poczekaj na zgodę, gdy zmiana jest większa niż pojedyncza, oczywista poprawka.
+- Nie zmieniaj plików ukrytych, `.git/**`, katalogów zależności (`vendor`, `node_modules`) ani plików sekretów.
+- Po zmianie uruchamiaj wyłącznie testy lub walidację potrzebną do bieżącego zadania i tylko po zgodzie na Bash.
+- Nie przeglądaj historii Git, nie uruchamiaj `git log`, `git show`, `git restore` ani `git blame` „na wszelki wypadek”. Najpierw zapytaj, czy użytkownik chce takiego sprawdzenia.
+- Ogranicz liczbę poleceń i odczytów do minimum. Nie wykonuj szerokich skanów, gdy wystarczy jedno precyzyjne pytanie.
 
-Note: `bash` is a separate channel. Once a `bash` command is approved it can read any
-file (e.g. `cat .env`), regardless of the `read` denies above — so keep `bash = ask`
-and do not approve commands that read secrets.
+## 7. Bash — katalog i komendy rozpoznawcze
+
+Zakaz obejmuje wszystkie polecenia Bash działające poza aktualnym katalogiem roboczym, również wtedy, gdy ścieżka jest ukryta w zmiennej, potoku, podstawieniu polecenia, skrypcie, aliasie, funkcji lub poleceniu złożonym. Nie obchodź tej zasady przez `cd`, `..`, `~`, `$HOME`, ścieżkę bezwzględną, dowiązanie symboliczne ani kontener/SSH.
+
+Polecenia rozpoznawcze i lokalizujące zawsze wymagają uprzedniego pytania użytkownika, nawet jeśli pozornie są nieszkodliwe. W szczególności nie wolno uruchamiać bez pytania `command -v tree`, `command -v <nazwa>`, `which <nazwa>`, `type <nazwa>`, `whereis <nazwa>`, `locate <wzorzec>`, `find <ścieżka>` ani ich odpowiedników.

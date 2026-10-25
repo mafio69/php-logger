@@ -170,7 +170,9 @@ final class DualLoggerTest extends TestCase
     {
         $captured = '';
         $this->fileManager->expects($this->once())->method('write')
-            ->willReturnCallback(function (string $msg) use (&$captured) { $captured = $msg; });
+            ->willReturnCallback(function (string $msg) use (&$captured) {
+                $captured = $msg;
+            });
 
         $logger = $this->createLogger(LogLevel::WARNING, 'Y-m-d H:i:s', 'UTC');
         $logger->warning('tz test');
@@ -199,7 +201,7 @@ final class DualLoggerTest extends TestCase
         $this->fileManager->expects($this->once())->method('write')
             ->with($this->stringContains('logged object'));
         $logger = $this->createLogger(LogLevel::DEBUG);
-        $logger->info(new class {
+        $logger->info(new class () {
             public function __toString(): string
             {
                 return 'logged object';

@@ -64,7 +64,7 @@ final class LogContextSerializerTest extends TestCase
 
     public function testJsonSerializableObject(): void
     {
-        $obj = new class implements \JsonSerializable {
+        $obj = new class () implements \JsonSerializable {
             public function jsonSerialize(): mixed
             {
                 return ['key' => 'val'];
@@ -78,7 +78,7 @@ final class LogContextSerializerTest extends TestCase
 
     public function testObjectWithToArray(): void
     {
-        $obj = new class {
+        $obj = new class () {
             public function toArray(): array
             {
                 return ['foo' => 'bar'];
@@ -92,7 +92,7 @@ final class LogContextSerializerTest extends TestCase
 
     public function testObjectWithToString(): void
     {
-        $obj = new class {
+        $obj = new class () {
             public function __toString(): string
             {
                 return 'stringified';
@@ -127,7 +127,7 @@ final class LogContextSerializerTest extends TestCase
 
     public function testToArrayHasPriorityOverToString(): void
     {
-        $obj = new class {
+        $obj = new class () {
             public function toArray(): array
             {
                 return ['from' => 'toArray'];

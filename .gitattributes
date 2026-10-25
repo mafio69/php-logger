@@ -1,0 +1,15 @@
+# Ignore internal files when exported via composer dist archive
+/tests export-ignore
+/.github export-ignore
+/.opencode export-ignore
+/.agents export-ignore
+/test-workspace export-ignore
+/phpunit.xml export-ignore
+/phpstan.neon export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/.editorconfig export-ignore
+/AUDYT.md export-ignore
+/ROADMAP.md export-ignore
+/AIREADME.md export-ignore
+/AGENTS.md export-ignore
+/GIT-FLOW.md export-ignore
