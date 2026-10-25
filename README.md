@@ -1,12 +1,23 @@
 # mafio69/fast-php-logger
 
-PSR-3 compliant dual logger for PHP 8.2+ with:
-- date-based log file structure with configurable subdirectory pattern
-- automatic log rotation by file size
-- caller location in every log entry (`directory/file.php:line`)
-- automatic anonymization of sensitive fields
-- configurable minimum log level for file output
-- configurable date format and timezone
+[![Latest Stable Version](https://img.shields.io/github/v/release/mafio69/php-logger?label=release&color=blue)](https://github.com/mafio69/php-logger/releases)
+[![CI Status](https://github.com/mafio69/php-logger/actions/workflows/symfony.yml/badge.svg)](https://github.com/mafio69/php-logger/actions)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF.svg)](https://www.php.net/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Packagist Downloads](https://img.shields.io/packagist/dt/mafio69/fast-php-logger.svg?color=orange)](https://packagist.org/packages/mafio69/fast-php-logger)
+
+PSR-3 compliant dual logger for PHP 8.1+ with:
+- Simultaneous dual logging (Console/STDERR + date-structured files)
+- Date-based log file structure with configurable subdirectory pattern
+- Automatic log rotation by file size with retention history
+- Concurrency-safe file writes (`LOCK_EX`)
+- Caller location in every log entry (`directory/file.php:line`)
+- Automatic anonymization of sensitive fields (passwords, tokens, PESEL, cards)
+- Safe serialization of objects, exceptions, and nested context data
+- Configurable minimum log level for file output
+- Configurable date format and timezone
+- Out-of-the-box framework support: Laravel (auto-discovery) and Symfony (Bundle)
+- Standalone zero-dependency single-file option available
 
 ## Installation
 
@@ -28,7 +39,7 @@ $logger->info('Hello');
 ```
 
 - Zero dependencies — PSR-3 interfaces are bundled inside
-- Works with PHP 8.2+
+- Works with PHP 8.1+
 - Identical API to the Composer version
 
 **Building the file yourself:**
@@ -74,12 +85,16 @@ $logger = new DualLogger(
 ```php
 $logger->info('Server started');
 ```
+```
 [2026-05-02 01:54:00] [INFO]    [Bootstrap/App.php:12] Server started
+```
   
 ```php
 $logger->warning('Login failed', ['email' => 'jan@example.com', 'token' => 'abc123xyz']);
 ```
+```
 [2026-05-02 01:54:00] [WARNING] [Auth/Service.php:88]  Login failed {"email":"jan****com","token":"a****yz"}
+```
   
 
 ```php
@@ -363,9 +378,40 @@ class MyService
 
 ---
 
-## Testing
+## Grafana & Loki Integration
+
+Fast-php-logger entries have a predictable structure:
+`[<timestamp>] [<level>] [<caller>] <message> {<context_json>}`
+
+### Parsing logs in Grafana Loki (LogQL)
+
+You can easily query and filter logs in Grafana using the `pattern` parser:
+
+```logql
+{app="backend"} | pattern "[<timestamp>] [<level>] [<caller>] <message> <context>"
+```
+
+To automatically extract properties from the JSON context as queryable fields:
+
+```logql
+{app="backend"} | pattern "[<timestamp>] [<level>] [<caller>] <message> <context>" | json context
+```
+
+Now you can filter directly by context fields (e.g. `order_id="42"` or `user_id="7"`) and build dashboards or alerting rules.
+
+---
+
+## Testing & Code Quality
 
 ```sh
 composer install
+
+# Run PHPUnit test suite (66 tests)
 composer test
+
+# Run static analysis (PHPStan) and code style check (PHP-CS-Fixer)
+composer run check:all
+
+# Automatically fix code style according to PSR-12
+composer run cs:fix
 ```
