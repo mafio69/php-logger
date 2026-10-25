@@ -38,17 +38,19 @@
 - Zauważysz problem poza zakresem? Zgłoś go w raporcie, nie naprawiaj na własną rękę.
 
 ## Commit
-- Commity wykonujesz samodzielnie i na bieżąco, aby zabezpieczać postęp prac i uniknąć utraty efektów pracy (pod warunkiem spełnienia Złotej zasady: testy i lintery muszą być zielone). Nie pytaj o zgodę na pojedynczy commit.
+- Agent commituje sam.
 - Nie zmieniaj git config user.name ani git config user.email.
 - Nie cofaj zmian przez git restore, git checkout --, git reset --hard, git clean -f ani podobne mechanizmy bez mojej zgody.
-- Nie commituj sekretów, plików .env ani kluczy.
+- Nie commituj sekretów, plików .env ani kluczy. Pilnujcie tych sekretów potem jest masa roboty jak wyjdzie na github
+- Obowiązek podpisywania się wyście to robili to się podpisywać w commit   
+    `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
 
 ## Push, master, deploy
 - git push wymaga osobnej, wyraźnej zgody Mariusza w bieżącej rozmowie.
-- Nie używaj force push.
-- master przyjmuje zmiany wyłącznie przez PR z zielonymi wymaganymi kontrolami.
+- Nie używaj force push!
+- Master przyjmuje zmiany wyłącznie przez PR z zielonymi wymaganymi kontrolami.
 - Deploy wymaga osobnej zgody Mariusza.
-- Po udanym wdrożeniu gałąź zadaniową można usunąć wyłącznie za zgodą.
+- Po udanym wdrożeniu gałąź zadaniową można usunąć.
 
 ## Koniec zadania
 - Podaj krótki raport: co zmieniono, jakie testy uruchomiono i z jakim wynikiem, co zostało otwarte.
@@ -74,7 +76,10 @@ flowchart TD
     I --> J{Wszystko zielone?}
     J -- Nie --> K[Napraw lub zgłoś Mariuszowi]
     K --> I
-    J -- Tak --> N[Commit - samodzielnie]
+    J -- Tak --> L{Zgoda Mariusza na commit?}
+    L -- Nie --> M[Czekaj na zgodę]
+    M --> L
+    L -- Tak --> N[Commit]
     N --> O{Zgoda na push?}
     O -- Nie --> P[Czekaj na zgodę]
     P --> O
